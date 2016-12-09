@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<SplitPane dividerPositions="0.5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chortitzer.nisjfx.FXMLDocumentController">
+    <items>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+            <children>
+                <TabPane layoutX="85.0" layoutY="-19.0" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <tabs>
+                        <Tab text="Registro Movil">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                    <children>
+                                        <Button fx:id="cmdChooseFileRegistro" layoutX="540.0" layoutY="47.0" mnemonicParsing="false" onAction="#chooseFileRegistro" text="..." />
+                                        <TextField fx:id="txtFileRegistro" layoutX="14.0" layoutY="47.0" prefHeight="27.0" prefWidth="517.0" />
+                                        <Label layoutX="14.0" layoutY="14.0" text="Carpeta con Archivos de Registro Movil" />
+                                        <Button fx:id="cmdActionRegistro" layoutX="14.0" layoutY="94.0" mnemonicParsing="false" onAction="#actionRegistro" text="Guardar Registro Movil en Base de Datos" />
+                                    </children>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Actualizar Base de Datos">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                    <children>
+                                        <Button fx:id="cmdChooseFileUpdateDB" layoutX="374.0" layoutY="49.0" mnemonicParsing="false" onAction="#chooseFileUpdateDB" text="..." />
+                                        <TextField fx:id="txtFileUpdateDB" layoutX="14.0" layoutY="49.0" prefHeight="31.0" prefWidth="349.0" text="C:\ArcView\LOMA PLATA ACTUAL" />
+                                        <Label layoutX="14.0" layoutY="14.0" text="Carpeta de ArcView" />
+                                        <Button fx:id="cmdActionUpdateDB" layoutX="14.0" layoutY="111.0" mnemonicParsing="false" onAction="#actionUpdateDB" text="Actualizar Basde Datos" />
+                                    </children>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Actualizar Garmin">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                    <children>
+                                        <Button fx:id="cmdActionConvert" layoutX="256.0" layoutY="63.0" mnemonicParsing="false" onAction="#actionConvert" text="Crear GPX" />
+                                    </children>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </children>
+        </AnchorPane>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+            <children>
+                <TextArea fx:id="txtStatus" layoutX="75.0" layoutY="-19.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+            </children>
+        </AnchorPane>
+    </items>
+</SplitPane>
