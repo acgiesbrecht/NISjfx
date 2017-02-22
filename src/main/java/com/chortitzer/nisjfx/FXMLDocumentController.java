@@ -307,11 +307,11 @@ public class FXMLDocumentController implements Initializable {
 
                             Map pgParams = new HashMap();
                             pgParams.put("dbtype", "postgis");                   //must be postgis
-                            pgParams.put("host", "192.168.1.10");      //the name or ip address of the machine running PostGIS
+                            pgParams.put("host", "192.168.1.26");      //the name or ip address of the machine running PostGIS
                             pgParams.put("port", 5432);             //the port that PostGIS is running on (generally 5432)
                             pgParams.put("database", "industria_usi");              //the name of the database to connect to.
-                            pgParams.put("user", "industria");                    //the user to connect with
-                            pgParams.put("passwd", "industria");                 //the password of the user.
+                            pgParams.put("user", "postgres");                    //the user to connect with
+                            pgParams.put("passwd", "123456789");                 //the password of the user.
                             pgParams.put("schema", "public");   //the schema of the database
                             pgParams.put("create spatial index", Boolean.TRUE);
 
