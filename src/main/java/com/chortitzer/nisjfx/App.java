@@ -1,6 +1,9 @@
 package com.chortitzer.nisjfx;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
@@ -17,6 +20,8 @@ public class App
 
     @Override
     public void start(Stage stage) throws Exception {
+
+        System.out.println(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")));
 
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/FXMLDocument.fxml"));
 

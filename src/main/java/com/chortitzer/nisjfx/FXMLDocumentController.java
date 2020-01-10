@@ -7,22 +7,6 @@ package com.chortitzer.nisjfx;
 
 import com.chortitzer.nisjfx.domain.TblIndUsiRegistroLecturas;
 import com.vividsolutions.jts.geom.Point;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,23 +19,13 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javax.persistence.EntityManager;
-import javax.persistence.Persistence;
-import javax.swing.JOptionPane;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import jdk.nashorn.internal.parser.DateParser;
 import org.alternativevision.gpx.GPXParser;
 import org.alternativevision.gpx.beans.GPX;
 import org.alternativevision.gpx.beans.Waypoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.data.DataStore;
-import org.geotools.data.DataStoreFinder;
-import org.geotools.data.DefaultTransaction;
-import org.geotools.data.FeatureSource;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.FileDataStoreFinder;
-import org.geotools.data.Transaction;
+import org.geotools.data.*;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
@@ -59,6 +33,7 @@ import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
+import org.json.JSONTokener;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -67,6 +42,20 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Persistence;
+import javax.swing.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * FXML Controller class
@@ -178,9 +167,9 @@ public class FXMLDocumentController implements Initializable {
                                 @Override
                                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                                     String path = file.toString();
-                                    String extension = path.substring(path.length() - 3, path.length());
+                                    String extension = getExtension(path).get();
 
-                                    if (extension.equals("xml") && path.contains("registros_")) {
+                                    if (extension.equals("json") && path.contains("registros_")) {
                                         registroFileList.add(new File(path));
                                         System.out.println((new File(path)).getName());
                                     }
@@ -193,7 +182,50 @@ public class FXMLDocumentController implements Initializable {
                                 updateMessage(status);
                             }
                             for (File registroFile : registroFileList) {
-                                DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+
+                                    InputStream is = new FileInputStream(registroFile);
+                                    JSONTokener tokener = new JSONTokener(is);
+                                    JSONObject object = new JSONObject(tokener);
+                                    JSONArray lecturas = object.getJSONObject("reading").getJSONArray("meter");
+
+                                    int count = 0;
+                                    status = status + "INICIADO.\n\n" + registroFile.getName() + "\n";
+                                    updateMessage(status);
+
+                                    for(Object obj : lecturas) {
+                                        JSONObject lectura = (JSONObject) obj;
+                                        int nroSerie = lectura.getInt("meterSerialNumber");
+                                        Date fechaHora = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(lectura.getString("readDateTime"));
+
+                                        em.getTransaction().begin();
+
+                                        TblIndUsiRegistroLecturas lecturaOld = em.find(TblIndUsiRegistroLecturas.class, fechaHora);
+
+                                        if (lecturaOld == null) {
+                                            TblIndUsiRegistroLecturas lecturaNew = new TblIndUsiRegistroLecturas();
+
+                                            JSONArray detalles = lectura.getJSONArray("readDetail");
+                                            lecturaNew.setNroserie(nroSerie);
+                                            lecturaNew.setFechahora(fechaHora);
+                                            for(Object o : detalles) {
+                                                JSONObject detalle = (JSONObject) o;
+                                                if(detalle.getString("obisCode").equals("15.8.0")) {
+                                                    lecturaNew.setKwh(detalle.getInt("readValue"));
+                                                }else if(detalle.getString("obisCode").equals("3.8.0")) {
+                                                    lecturaNew.setKvar(detalle.getInt("readValue"));
+                                                }
+                                            }
+
+                                            em.persist(lecturaNew);
+                                            count++;
+                                        }
+                                        //em.getTransaction().commit();
+                                        status = status + "Se guardaron " + String.valueOf(count) + " lecturas.";
+                                        updateMessage(status);
+                                    }
+                                    //System.out.println("Id  : " + object.getLong("id"));
+
+                                /*DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
                                 DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
                                 Document doc = docBuilder.parse(registroFile);
                                 doc.getDocumentElement().normalize();
@@ -232,18 +264,17 @@ public class FXMLDocumentController implements Initializable {
                                         }
                                         em.getTransaction().commit();
                                         updateMessage(status + "Se guardaron " + String.valueOf(count) + " lecturas.");
-                                    }
+                                    }*/
                                 }
 
-                                status = status + "Se guardaron " + String.valueOf(count) + " lecturas.\n\n" + "FINALIZADO.";
+                                status = status + "\n\n" + "FINALIZADO.";
                                 updateMessage(status);
                             }
-                        }
 
                     } catch (Exception ex) {
                         String s = ex.getMessage();
                         if (s.indexOf("Duplicate entry") > 0) {
-                            JOptionPane.showMessageDialog(null, "Ya se guardò este archivo.");
+                            JOptionPane.showMessageDialog(null, "Ya se guardï¿½ este archivo.");
                         } else {
                             JOptionPane.showMessageDialog(null, Thread.currentThread().getStackTrace()[1].getMethodName() + " - " + ex.getMessage());
                             logger.error(Thread.currentThread().getStackTrace()[1].getMethodName(), ex);
@@ -412,7 +443,7 @@ public class FXMLDocumentController implements Initializable {
                         pgParams.put("create spatial index", Boolean.TRUE);
                         DataStore pgDatastore = DataStoreFinder.getDataStore(pgParams);
 
-                        SimpleFeatureSource featureSource = pgDatastore.getFeatureSource("nis_usuario");
+                        SimpleFeatureSource featureSource = pgDatastore.getFeatureSource("nis_usuario_s");
                         CoordinateReferenceSystem targetCrs = CRS.decode("EPSG:4326");
                         CoordinateReferenceSystem sourceCrs = CRS.decode("EPSG:32721");
                         SimpleFeatureCollection collection = featureSource.getFeatures();
@@ -470,4 +501,11 @@ public class FXMLDocumentController implements Initializable {
             logger.error(Thread.currentThread().getStackTrace()[1].getMethodName(), ex);
         }
     }
+
+    public Optional<String> getExtension(String filename) {
+        return Optional.ofNullable(filename)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(filename.lastIndexOf(".") + 1));
+    }
+
 }
